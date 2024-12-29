@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+logai
+numpy
+scikit-learn
+plotly
+tensorflow>=2.13.0
+pandas
+python-multipart
