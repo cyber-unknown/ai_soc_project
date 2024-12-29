@@ -1,60 +1,65 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from services.log_analyzer import analyze_logs
 import os
-import plotly.express as px
-import pandas as pd
+import shutil
+from services.log_analyzer import analyze_logs
+import json
 
 app = FastAPI()
 
-# Add CORS middleware
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Update this with your React app's URL
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-UPLOAD_FOLDER = "./uploads/"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+# Create uploads directory if it doesn't exist
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @app.post("/upload/")
-async def upload_log(file: UploadFile = File(...)):
-    if not file.filename.endswith('.csv'):
-        raise HTTPException(status_code=400, detail="Only CSV files are allowed")
-    
-    file_location = os.path.join(UPLOAD_FOLDER, file.filename)
+async def upload_file(file: UploadFile = File(...)):
     try:
-        with open(file_location, "wb") as buffer:
-            buffer.write(await file.read())
-        return {"filename": file.filename, "status": "Uploaded"}
+        # Save uploaded file
+        file_path = os.path.join(UPLOAD_DIR, file.filename)
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        return {"filename": file.filename, "status": "success"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error uploading file: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/analyze/")
-async def analyze_log(file: UploadFile = File(...)):
-    if not file.filename.endswith('.csv'):
-        raise HTTPException(status_code=400, detail="Only CSV files are allowed")
-    
-    file_location = os.path.join(UPLOAD_FOLDER, file.filename)
+async def analyze_file(file: UploadFile = File(...)):
     try:
-        result = analyze_logs(file_location)
-        return result
+        # Save uploaded file
+        file_path = os.path.join(UPLOAD_DIR, file.filename)
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        # Analyze the logs
+        results = analyze_logs(file_path)
+        
+        # Clean up
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        
+        return results
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error analyzing logs: {str(e)}")
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        raise HTTPException(status_code=422, detail=str(e))
 
-@app.get("/dashboard/")
-async def dashboard():
-    try:
-        # This is a placeholder. In a real application, you'd aggregate data from multiple log analyses.
-        data = pd.DataFrame({
-            "threat": ["DDoS", "SQL Injection", "XSS", "Brute Force"],
-            "count": [5, 3, 2, 1]
-        })
-        fig = px.bar(data, x="threat", y="count", title="Threats Detected")
-        return HTMLResponse(fig.to_html())
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error generating dashboard: {str(e)}")
+@app.get("/")
+async def root():
+    return {"message": "Log Analysis API is running"}
 
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

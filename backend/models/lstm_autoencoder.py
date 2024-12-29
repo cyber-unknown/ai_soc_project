@@ -1,58 +1,83 @@
 import tensorflow as tf
-from tensorflow.keras import layers, Model
+import numpy as np
+from sklearn.preprocessing import StandardScaler
 
-class LogAnalysisModel(Model):
-    def __init__(self, seq_length, n_features, latent_dim=64):
-        super(LogAnalysisModel, self).__init__()
-        self.seq_length = seq_length
+class LogAnalysisModel:
+    def __init__(self, sequence_length, n_features):
+        self.sequence_length = sequence_length
         self.n_features = n_features
-        self.latent_dim = latent_dim
+        self.model = self._build_model()
+        self.threshold = 0.7
+        self.scaler = StandardScaler()
         
+    def _build_model(self):
         # Encoder
-        self.encoder = tf.keras.Sequential([
-            layers.Input(shape=(seq_length, n_features)),
-            layers.BatchNormalization(),
-            layers.Bidirectional(layers.LSTM(latent_dim, return_sequences=True)),
-            layers.Dropout(0.2),
-            layers.BatchNormalization(),
-            layers.Bidirectional(layers.LSTM(latent_dim // 2)),
-            layers.Dense(latent_dim, activation='relu')
-        ])
-        
-        # Attention mechanism
-        self.attention = layers.Dense(1, activation='tanh')
+        inputs = tf.keras.layers.Input(shape=(self.sequence_length, self.n_features))
+        encoded = tf.keras.layers.LSTM(32, return_sequences=True)(inputs)
+        encoded = tf.keras.layers.Dropout(0.2)(encoded)
+        encoded = tf.keras.layers.LSTM(16)(encoded)
+        encoded = tf.keras.layers.Dense(8, activation='relu')(encoded)
         
         # Decoder
-        self.decoder = tf.keras.Sequential([
-            layers.RepeatVector(seq_length),
-            layers.BatchNormalization(),
-            layers.Bidirectional(layers.LSTM(latent_dim, return_sequences=True)),
-            layers.Dropout(0.2),
-            layers.BatchNormalization(),
-            layers.TimeDistributed(layers.Dense(n_features))
-        ])
+        decoded = tf.keras.layers.RepeatVector(self.sequence_length)(encoded)
+        decoded = tf.keras.layers.LSTM(16, return_sequences=True)(decoded)
+        decoded = tf.keras.layers.Dropout(0.2)(decoded)
+        decoded = tf.keras.layers.LSTM(32, return_sequences=True)(decoded)
+        outputs = tf.keras.layers.TimeDistributed(tf.keras.layers.Dense(self.n_features))(decoded)
         
-    def call(self, inputs):
-        # Encode
-        encoded = self.encoder(inputs)
-        
-        # Apply attention
-        attention_weights = self.attention(encoded)
-        attention_weights = tf.nn.softmax(attention_weights, axis=1)
-        context_vector = attention_weights * encoded
-        
-        # Decode
-        decoded = self.decoder(context_vector)
-        return decoded
+        return tf.keras.Model(inputs, outputs)
     
-    def get_anomaly_score(self, x):
-        reconstructed = self(x)
-        mse = tf.keras.losses.MeanSquaredError()
-        reconstruction_error = mse(x, reconstructed)
-        return reconstruction_error
-
-    def detect_anomalies(self, x, threshold=None):
-        scores = self.get_anomaly_score(x)
-        if threshold is None:
-            threshold = tf.math.reduce_mean(scores) + 2 * tf.math.reduce_std(scores)
-        return scores > threshold
+    def train(self, sequences, epochs=10, batch_size=32):
+        """Train the model on the input sequences."""
+        self.model.compile(optimizer='adam', loss='mse')
+        history = self.model.fit(
+            sequences, sequences,
+            epochs=epochs,
+            batch_size=batch_size,
+            validation_split=0.1,
+            verbose=0
+        )
+        
+        # Calculate reconstruction error threshold
+        reconstructions = self.model.predict(sequences)
+        mse = np.mean(np.power(sequences - reconstructions, 2), axis=(1, 2))
+        self.threshold = np.percentile(mse, 95)  # Set threshold at 95th percentile
+        
+        return history
+    
+    def get_anomaly_score(self, sequences):
+        """Calculate anomaly scores for input sequences."""
+        reconstructions = self.model.predict(sequences)
+        mse = np.mean(np.power(sequences - reconstructions, 2), axis=(1, 2))
+        scores = tf.nn.sigmoid(tf.convert_to_tensor(mse))  # Normalize scores between 0 and 1
+        return scores
+    
+    def detect_anomalies(self, sequences):
+        """Detect anomalies in the input sequences."""
+        reconstructions = self.model.predict(sequences)
+        mse = np.mean(np.power(sequences - reconstructions, 2), axis=(1, 2))
+        return tf.cast(mse > self.threshold, tf.float32)
+    
+    def get_confidence_scores(self, sequences):
+        """Calculate confidence scores for anomaly predictions."""
+        reconstructions = self.model.predict(sequences)
+        mse = np.mean(np.power(sequences - reconstructions, 2), axis=(1, 2))
+        
+        # Calculate distance from threshold
+        distances = np.abs(mse - self.threshold)
+        max_distance = max(np.max(distances), 1e-10)  # Avoid division by zero
+        
+        # Normalize distances to get confidence scores
+        confidence = distances / max_distance
+        return tf.nn.sigmoid(tf.convert_to_tensor(confidence))
+    
+    def save_model(self, path):
+        """Save the model to disk."""
+        self.model.save(path)
+    
+    @classmethod
+    def load_model(cls, path, sequence_length, n_features):
+        """Load a saved model from disk."""
+        instance = cls(sequence_length, n_features)
+        instance.model = tf.keras.models.load_model(path)
+        return instance

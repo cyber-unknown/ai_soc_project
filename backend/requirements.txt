@@ -2,7 +2,7 @@ fastapi
 uvicorn
 logai
 numpy
-scikit-learn
+scikit-learn>=1.0.2
 plotly
 tensorflow>=2.13.0
 pandas
