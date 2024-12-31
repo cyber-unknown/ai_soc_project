@@ -1,149 +1,170 @@
-# AI-Powered Security Operations Center (SOC)
+# 🛡️ AI-Powered Security Operations Center (SOC)
 
-An advanced security monitoring and analysis system that leverages artificial intelligence to detect, analyze, and respond to potential security threats in real-time.
+<div align="center">
 
-## Features
+![Version](https://img.shields.io/badge/version-1.0.0-blue.svg?cacheSeconds=2592000)
+![Python](https://img.shields.io/badge/Python-3.8+-green.svg)
+![FastAPI](https://img.shields.io/badge/FastAPI-latest-blue.svg)
+![React](https://img.shields.io/badge/React-18-blue.svg)
+![Docker](https://img.shields.io/badge/Docker-ready-blue.svg)
 
-- **Real-time Monitoring**: Continuously monitors system metrics including CPU usage, memory utilization, request rates, and error rates
-- **AI-Powered Analysis**: Uses Google's Gemini AI to analyze security anomalies and provide actionable insights
-- **Threat Assessment**: Provides detailed threat assessments with risk levels and potential impact analysis
-- **Automated Response**: Generates and executes Windows-compatible security commands
-- **Interactive Dashboard**: Modern React-based dashboard for visualizing security metrics and analysis
-- **Command Execution**: Secure command execution interface for implementing security measures
+</div>
 
-## Tech Stack
+> An intelligent security monitoring and analysis system leveraging Google's Gemini AI to detect, analyze, and respond to security threats in real-time.
+
+## ✨ Features
+
+- 🔍 **Real-time Monitoring** - Track system metrics (CPU, memory, requests, errors)
+- 🤖 **AI-Powered Analysis** - Advanced threat detection using Google's Gemini AI
+- ⚡ **Instant Response** - Automated security command generation and execution
+- 📊 **Interactive Dashboard** - Real-time visualization of security metrics
+- 🔐 **Smart Threat Assessment** - Detailed analysis with risk levels and impact evaluation
+- 💻 **Windows Integration** - Native support for Windows security commands
+
+## 🚀 Tech Stack
 
 ### Backend
-- Python 3.8+
-- FastAPI
-- Google Gemini AI API
-- Uvicorn
-- Python-dotenv
+- 🐍 Python 3.8+
+- ⚡ FastAPI
+- 🧠 Google Gemini AI
+- 🔄 Uvicorn
+- 🌍 Docker
 
 ### Frontend
-- React
-- Material-UI (MUI)
-- Chart.js
-- Axios
+- ⚛️ React 18
+- 🎨 Material-UI (MUI)
+- 📈 Chart.js
+- 🔌 Axios
 
-## Prerequisites
+## 📋 Prerequisites
 
-1. Python 3.8 or higher
-2. Node.js 14 or higher
-3. Google Cloud API key with Gemini AI access
-4. Windows operating system (for command execution)
+- Python 3.8+
+- Node.js 14+
+- Google Cloud API key (Gemini AI access)
+- Windows OS
+- Docker (optional)
 
-## Installation
+## 🛠️ Installation
 
-1. Clone the repository:
+### Using Docker (Recommended)
 ```bash
-git clone <repository-url>
+# Clone the repository
+git clone https://github.com/your-username/ai_soc_project.git
 cd ai_soc_project
+
+# Configure environment
+cp backend/.env.example backend/.env
+# Edit .env with your GOOGLE_API_KEY
+
+# Start the application
+docker-compose up --build
 ```
 
-2. Set up the backend:
+### Manual Setup
 ```bash
+# Backend setup
 cd backend
 python -m venv venv
 .\venv\Scripts\activate
 pip install -r requirements.txt
-```
 
-3. Configure environment variables:
-Create a `.env` file in the backend directory with:
-```
-GOOGLE_API_KEY=your_gemini_api_key
-```
-
-4. Set up the frontend:
-```bash
+# Frontend setup
 cd ../frontend
 npm install
 ```
 
-## Running the Application
+## 🚀 Running the Application
 
-1. Start the backend server:
+### Docker Mode
 ```bash
+docker-compose up
+```
+
+### Development Mode
+```bash
+# Terminal 1 - Backend
 cd backend
 .\venv\Scripts\activate
-uvicorn main:app --reload
-```
-The backend will run on `http://localhost:8000`
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
-2. Start the frontend development server:
-```bash
+# Terminal 2 - Frontend
 cd frontend
 npm start
 ```
-The frontend will run on `http://localhost:3000`
 
-## Project Structure
+Access the application at:
+- 🌐 Frontend: http://localhost:3000
+- 📡 Backend API: http://localhost:8000
+- 📚 API Docs: http://localhost:8000/docs
+
+## 📁 Project Structure
 
 ```
 ai_soc_project/
-├── backend/
-│   ├── main.py              # FastAPI application and Gemini AI integration
-│   ├── requirements.txt     # Python dependencies
-│   └── .env                 # Environment variables
-├── frontend/
-│   ├── src/
-│   │   ├── App.jsx         # Main application component
-│   │   ├── Dashboard.jsx   # Security metrics dashboard
-│   │   └── AnalysisResult.jsx  # Security analysis display
-│   ├── package.json
-│   └── public/
-└── README.md
+├── 🐳 docker-compose.yml        # Docker composition
+├── 🐋 Dockerfile               # Docker configuration
+│
+├── 📂 backend/
+│   ├── 📜 main.py             # FastAPI application
+│   ├── 📂 models/             # Data models
+│   ├── 📂 services/           # Business logic
+│   ├── 📂 uploads/            # File storage
+│   └── 📝 requirements.txt    # Python dependencies
+│
+└── 📂 frontend/
+    ├── 📂 public/             # Static assets
+    └── 📂 src/
+        ├── 📱 App.jsx         # Root component
+        ├── 📊 Dashboard.jsx   # Metrics display
+        ├── 🔍 AnalysisResult.jsx  # Security analysis
+        ├── 📤 LogUpload.jsx   # Log file handling
+        └── 🎨 App.css         # Styles
 ```
 
-## Security Analysis Features
+## 🔒 Security Features
 
-### Metrics Monitored
-- CPU Usage
-- Memory Utilization
-- Request Rate
-- Error Rate
+### Monitored Metrics
+- 💻 CPU Usage
+- 💾 Memory Utilization
+- 🌐 Request Rate
+- ⚠️ Error Rate
 
 ### Analysis Components
-1. **Threat Assessment**
-   - Detailed analysis of security anomalies
+1. **🔍 Threat Assessment**
+   - Anomaly detection
    - Confidence scoring
-   - Severity classification
+   - Severity levels
 
-2. **Impact Analysis**
-   - Risk level evaluation
-   - Affected components identification
-   - Potential consequences assessment
+2. **📊 Impact Analysis**
+   - Risk evaluation
+   - Component identification
+   - Consequence assessment
 
-3. **Prevention Measures**
-   - Actionable security recommendations
+3. **🛡️ Prevention Measures**
+   - Security recommendations
    - Best practices
-   - Preventive steps
+   - Preventive actions
 
-4. **Mitigation Commands**
-   - Windows-compatible security commands
-   - Command descriptions and purposes
-   - Secure execution interface
+4. **⚡ Mitigation Commands**
+   - Windows security commands
+   - Automated execution
+   - Command validation
 
-## Contributing
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## Security Considerations
+## ⚠️ Security Considerations
 
-- The application requires administrative privileges for executing certain security commands
-- Store API keys securely and never commit them to version control
-- Regular updates of dependencies are recommended
-- Follow security best practices when executing system commands
+- 🔑 Requires admin privileges for security commands
+- 🔒 Never commit API keys to version control
+- 🔄 Keep dependencies updated
+- ✅ Follow security best practices
 
-## License
+## 💬 Support
 
-[MIT License](LICENSE)
-
-## Support
-
-For support, please open an issue in the repository or contact the development team.
+Need help? Open an issue or contact the development team.
